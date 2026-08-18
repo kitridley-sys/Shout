@@ -119,6 +119,161 @@
   .refresh-btn:active { transform: scale(0.97); }
   .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .watch-btn {
+    border: 1px solid var(--line);
+    background: white;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--navy);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .watch-btn.active {
+    background: var(--navy);
+    color: white;
+    border-color: var(--navy);
+  }
+
+  .watch-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .watch-panel.open { display: block; }
+  .watch-panel h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+  }
+  .watch-panel .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  .watch-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .watch-add-row input {
+    flex: 1;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13.5px;
+    outline: none;
+  }
+  .watch-add-row input:focus { border-color: var(--sea); }
+  .watch-add-row button {
+    background: var(--sea);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .watch-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .watch-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--foam);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 6px 5px 12px;
+    font-size: 12.5px;
+    color: var(--navy);
+  }
+  .watch-chip button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 2px 4px;
+  }
+  .watch-chip button:hover { color: #991b1b; }
+  .watch-empty {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .alert-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .alert-toggle-row button {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .alert-toggle-row button.granted {
+    background: #16a34a;
+  }
+  .alert-toggle-row button:disabled {
+    background: var(--muted);
+    cursor: default;
+  }
+
+  .card.watched-card {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 1px rgba(255,95,0,0.15);
+  }
+  .watch-star {
+    color: var(--orange);
+    margin-right: 4px;
+  }
+
+  .toast-stack {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(92vw, 420px);
+  }
+  .toast {
+    background: var(--navy-deep);
+    color: white;
+    border-left: 4px solid var(--orange);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    font-size: 13.5px;
+    animation: toastIn 0.25s ease;
+  }
+  .toast b { color: #ffd7b8; }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   .count-row {
     font-size: 12.5px;
@@ -256,6 +411,8 @@
 </head>
 <body>
 
+<div class="toast-stack" id="toastStack"></div>
+
 <header>
   <div class="header-row">
     <div class="title">
@@ -279,6 +436,23 @@
       </svg>
       Refresh
     </button>
+    <button class="watch-btn" id="watchBtn">★ Watching <span id="watchCount">0</span></button>
+  </div>
+
+  <div class="watch-panel" id="watchPanel">
+    <h3>Watched stations</h3>
+    <p class="hint">Get alerted when one of these stations launches. Type a station name and hit Add.</p>
+    <div class="watch-add-row">
+      <input type="text" id="watchInput" placeholder="e.g. Poole, Salcombe, Tower…" list="stationSuggestions" />
+      <datalist id="stationSuggestions"></datalist>
+      <button id="watchAddBtn">Add</button>
+    </div>
+    <div class="watch-chips" id="watchChips"></div>
+    <div class="watch-empty" id="watchEmpty">No stations watched yet — add one above.</div>
+    <div class="alert-toggle-row">
+      <span id="alertStatusText">Browser alerts are off</span>
+      <button id="alertPermBtn">Enable alerts</button>
+    </div>
   </div>
 
   <div class="count-row" id="countRow"></div>
@@ -302,9 +476,148 @@
   const statusText = document.getElementById('statusText');
   const refreshBtn = document.getElementById('refreshBtn');
   const searchBox = document.getElementById('searchBox');
+  const watchBtn = document.getElementById('watchBtn');
+  const watchCount = document.getElementById('watchCount');
+  const watchPanel = document.getElementById('watchPanel');
+  const watchInput = document.getElementById('watchInput');
+  const watchAddBtn = document.getElementById('watchAddBtn');
+  const watchChips = document.getElementById('watchChips');
+  const watchEmpty = document.getElementById('watchEmpty');
+  const stationSuggestions = document.getElementById('stationSuggestions');
+  const alertPermBtn = document.getElementById('alertPermBtn');
+  const alertStatusText = document.getElementById('alertStatusText');
+  const toastStack = document.getElementById('toastStack');
 
   let allLaunches = [];
   let refreshTimer = null;
+
+  // ---------- Watch list (persisted in this browser) ----------
+  const WATCH_KEY = 'rnli_watched_stations';
+  let watchList = [];
+  try {
+    watchList = JSON.parse(localStorage.getItem(WATCH_KEY) || '[]');
+    if (!Array.isArray(watchList)) watchList = [];
+  } catch { watchList = []; }
+
+  let seenLaunchIds = null; // null = not initialised yet (first load shouldn't trigger alerts)
+
+  function saveWatchList() {
+    try { localStorage.setItem(WATCH_KEY, JSON.stringify(watchList)); } catch {}
+  }
+
+  function isWatchedName(name) {
+    if (!name) return false;
+    const n = name.trim().toLowerCase();
+    return watchList.some(w => w.toLowerCase() === n);
+  }
+
+  function renderWatchChips() {
+    watchCount.textContent = watchList.length;
+    watchBtn.classList.toggle('active', watchList.length > 0);
+    watchEmpty.style.display = watchList.length === 0 ? 'block' : 'none';
+    watchChips.innerHTML = watchList.map((name, i) => `
+      <span class="watch-chip">${name}<button data-idx="${i}" aria-label="Remove">×</button></span>
+    `).join('');
+    watchChips.querySelectorAll('button[data-idx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        watchList.splice(idx, 1);
+        saveWatchList();
+        renderWatchChips();
+        render(allLaunches);
+      });
+    });
+  }
+
+  function addWatchStation(rawName) {
+    const name = (rawName || '').trim();
+    if (!name) return;
+    if (isWatchedName(name)) { watchInput.value = ''; return; }
+    watchList.push(name);
+    saveWatchList();
+    watchInput.value = '';
+    renderWatchChips();
+    render(allLaunches);
+  }
+
+  function updateStationSuggestions() {
+    const names = [...new Set(allLaunches.map(l => l.title || l.shortName).filter(Boolean))].sort();
+    stationSuggestions.innerHTML = names.map(n => `<option value="${n}"></option>`).join('');
+  }
+
+  watchBtn.addEventListener('click', () => watchPanel.classList.toggle('open'));
+  watchAddBtn.addEventListener('click', () => addWatchStation(watchInput.value));
+  watchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addWatchStation(watchInput.value); }
+  });
+
+  // ---------- Browser notification permission ----------
+  function refreshAlertStatus() {
+    if (!('Notification' in window)) {
+      alertStatusText.textContent = 'Browser alerts not supported here';
+      alertPermBtn.disabled = true;
+      alertPermBtn.textContent = 'Unavailable';
+      return;
+    }
+    const perm = Notification.permission;
+    if (perm === 'granted') {
+      alertStatusText.textContent = 'Browser alerts are on';
+      alertPermBtn.textContent = 'Enabled';
+      alertPermBtn.classList.add('granted');
+      alertPermBtn.disabled = true;
+    } else if (perm === 'denied') {
+      alertStatusText.textContent = 'Alerts blocked — enable in browser settings';
+      alertPermBtn.textContent = 'Blocked';
+      alertPermBtn.disabled = true;
+    } else {
+      alertStatusText.textContent = 'Browser alerts are off';
+      alertPermBtn.textContent = 'Enable alerts';
+      alertPermBtn.disabled = false;
+      alertPermBtn.classList.remove('granted');
+    }
+  }
+  alertPermBtn.addEventListener('click', async () => {
+    if (!('Notification' in window)) return;
+    await Notification.requestPermission();
+    refreshAlertStatus();
+  });
+  refreshAlertStatus();
+
+  // ---------- Toast + notification when a watched station launches ----------
+  function showToast(launch) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `<b>⚓ ${launch.title || launch.shortName || 'A watched station'}</b> just launched — ${formatExact(launch.launchDate)}`;
+    toastStack.appendChild(el);
+    setTimeout(() => el.remove(), 12000);
+  }
+
+  function notifyLaunch(launch) {
+    const stationName = launch.title || launch.shortName || 'A watched station';
+    showToast(launch);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('RNLI launch: ' + stationName, {
+          body: 'Launched ' + formatExact(launch.launchDate),
+          tag: 'rnli-launch-' + launch.id
+        });
+      } catch {}
+    }
+  }
+
+  function checkForWatchedLaunches(newData) {
+    const currentIds = new Set(newData.map(l => l.id));
+    if (seenLaunchIds === null) {
+      // First load: just record what's there, don't alert on existing launches
+      seenLaunchIds = currentIds;
+      return;
+    }
+    const freshOnes = newData.filter(l => !seenLaunchIds.has(l.id));
+    freshOnes.forEach(l => {
+      if (isWatchedName(l.title || l.shortName)) notifyLaunch(l);
+    });
+    seenLaunchIds = currentIds;
+  }
   // Same-origin endpoint backed by a Netlify serverless function
   // (netlify/functions/launches.mts) which fetches the RNLI API server-side —
   // no browser CORS restrictions apply since this is our own domain.
@@ -397,11 +710,13 @@
       const stationUrl = l.website
         ? (l.website.startsWith('http') ? l.website : 'https://' + l.website)
         : '#';
+      const stationName = l.title || l.shortName || 'Unknown station';
+      const watched = isWatchedName(stationName);
       html += `
-        <div class="card">
+        <div class="card${watched ? ' watched-card' : ''}">
           <div class="boat-badge">${boatBadgeText(l.lifeboat_IdNo)}</div>
           <div class="info">
-            <a class="station-name" href="${stationUrl}" target="_blank" rel="noopener">${l.title || l.shortName || 'Unknown station'}</a>
+            <a class="station-name" href="${stationUrl}" target="_blank" rel="noopener">${watched ? '<span class="watch-star">★</span>' : ''}${stationName}</a>
             <div class="meta-line">
               <span class="lifeboat-id">${l.lifeboat_IdNo || '—'}</span>
               <span>Launch #${l.id ?? ''}</span>
@@ -422,7 +737,9 @@
     setStatus('ok', 'Loading…');
     try {
       const data = await fetchLaunchesData();
+      checkForWatchedLaunches(data);
       allLaunches = data.sort((a, b) => new Date(b.launchDate) - new Date(a.launchDate));
+      updateStationSuggestions();
       render(allLaunches);
       setStatus('ok', 'Live · updated ' + new Date().toLocaleTimeString());
     } catch (err) {
@@ -443,6 +760,7 @@
   refreshBtn.addEventListener('click', () => loadLaunches(true));
   searchBox.addEventListener('input', () => render(allLaunches));
 
+  renderWatchChips();
   loadLaunches(false);
   refreshTimer = setInterval(() => loadLaunches(false), 60000);
 </script>
