@@ -407,6 +407,14 @@
     padding: 10px 20px 30px;
   }
   footer a { color: var(--sea); }
+  footer .donate-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--orange);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  footer .donate-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -467,6 +475,8 @@
 
 <footer>
   Data via the official RNLI launches API (services.rnli.org) · Not an official RNLI product · Auto-refreshes every 60s
+  <br>
+  <a class="donate-link" href="https://rnli.org/support-us/give-money/donate" target="_blank" rel="noopener">❤ Donate to the RNLI</a> — help fund the crews behind every launch on this page
 </footer>
 
 <script>
