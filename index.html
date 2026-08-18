@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNLI Lifeboat Launches</title>
+<style>
+  :root {
+    --navy: #002d5c;
+    --navy-deep: #001a38;
+    --orange: #ff5f00;
+    --sea: #0072a3;
+    --foam: #f4f8fb;
+    --line: #dfe7ee;
+    --text: #14202b;
+    --muted: #5a6c7a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--foam);
+    color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 100%);
+    color: white;
+    padding: 22px 20px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .title h1 {
+    font-size: 19px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .title .accent { color: var(--orange); }
+  .subtitle {
+    font-size: 12.5px;
+    color: #b9cbe0;
+    margin: 4px 0 0;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .status-pill {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    color: #cfe3f5;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 0 0 rgba(74,222,128,0.6);
+    animation: pulse 2s infinite;
+  }
+  .dot.error { background: #f87171; animation: none; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+    100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px 14px 40px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 14px;
+    align-items: center;
+  }
+  .search {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 14px;
+    background: white;
+    outline: none;
+  }
+  .search:focus { border-color: var(--sea); }
+  .refresh-btn {
+    border: 1px solid var(--line);
+    background: white;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--navy);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .refresh-btn:active { transform: scale(0.97); }
+  .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .count-row {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: box-shadow 0.15s ease;
+  }
+  .card:hover { box-shadow: 0 2px 8px rgba(0,45,92,0.08); }
+  .day-sep {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--sea);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 14px 2px 4px;
+  }
+  .day-sep:first-child { margin-top: 0; }
+
+  .boat-badge {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--sea), var(--navy));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.1;
+    padding: 2px;
+  }
+  .info { flex: 1; min-width: 0; }
+  .station-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+  }
+  .station-name:hover { color: var(--sea); text-decoration: underline; }
+  .meta-line {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .lifeboat-id {
+    background: var(--foam);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--navy);
+  }
+  .time-col {
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .time-ago {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .time-exact {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .empty, .error-box, .loading-box {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .error-box {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    color: #991b1b;
+  }
+  .error-box button {
+    margin-top: 10px;
+    background: #991b1b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .skeleton {
+    height: 68px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #eef2f6 25%, #f6f9fb 37%, #eef2f6 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    margin-bottom: 8px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+  footer {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--muted);
+    padding: 10px 20px 30px;
+  }
+  footer a { color: var(--sea); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="title">
+      <h1>RNLI <span class="accent">Launches</span></h1>
+    </div>
+    <div class="status-pill" id="statusPill">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Connecting…</span>
+    </div>
+  </div>
+  <p class="subtitle">Last 50 lifeboat launches across the UK &amp; Ireland — from the official RNLI feed</p>
+</header>
+
+<main>
+  <div class="toolbar">
+    <input type="text" class="search" id="searchBox" placeholder="Filter by station name…" />
+    <button class="refresh-btn" id="refreshBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="count-row" id="countRow"></div>
+  <div class="list" id="list">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </div>
+</main>
+
+<footer>
+  Data via the official RNLI launches API (services.rnli.org) · Not an official RNLI product · Auto-refreshes every 60s
+</footer>
+
+<script>
+  const listEl = document.getElementById('list');
+  const countRow = document.getElementById('countRow');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const searchBox = document.getElementById('searchBox');
+
+  let allLaunches = [];
+  let refreshTimer = null;
+  // Same-origin endpoint backed by a Netlify serverless function
+  // (netlify/functions/launches.mts) which fetches the RNLI API server-side —
+  // no browser CORS restrictions apply since this is our own domain.
+  const API_URL = '/api/launches';
+
+  function setStatus(mode, text) {
+    statusText.textContent = text;
+    statusDot.classList.toggle('error', mode === 'error');
+  }
+
+  async function fetchWithTimeout(url, timeoutMs = 10000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.text();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function fetchLaunchesData() {
+    const text = await fetchWithTimeout(API_URL);
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) throw new Error('Unexpected response shape');
+    return data;
+  }
+
+  function timeAgo(dateStr) {
+    const now = new Date();
+    const then = new Date(dateStr);
+    const diffMs = now - then;
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function formatExact(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleString(undefined, {
+      weekday: 'short', day: 'numeric', month: 'short',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function dayLabel(dateStr) {
+    const d = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const sameDay = (a, b) => a.toDateString() === b.toDateString();
+    if (sameDay(d, today)) return 'Today';
+    if (sameDay(d, yesterday)) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  function boatBadgeText(idNo) {
+    if (!idNo) return '⚓';
+    return idNo;
+  }
+
+  function render(launches) {
+    const q = searchBox.value.trim().toLowerCase();
+    const filtered = q
+      ? launches.filter(l => (l.title || l.shortName || '').toLowerCase().includes(q))
+      : launches;
+
+    countRow.textContent = filtered.length === launches.length
+      ? `Showing all ${launches.length} launches`
+      : `Showing ${filtered.length} of ${launches.length} launches`;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<div class="empty">No launches match that filter.</div>';
+      return;
+    }
+
+    let html = '';
+    let lastDay = null;
+    filtered.forEach(l => {
+      const label = dayLabel(l.launchDate);
+      if (label !== lastDay) {
+        html += `<div class="day-sep">${label}</div>`;
+        lastDay = label;
+      }
+      const stationUrl = l.website
+        ? (l.website.startsWith('http') ? l.website : 'https://' + l.website)
+        : '#';
+      html += `
+        <div class="card">
+          <div class="boat-badge">${boatBadgeText(l.lifeboat_IdNo)}</div>
+          <div class="info">
+            <a class="station-name" href="${stationUrl}" target="_blank" rel="noopener">${l.title || l.shortName || 'Unknown station'}</a>
+            <div class="meta-line">
+              <span class="lifeboat-id">${l.lifeboat_IdNo || '—'}</span>
+              <span>Launch #${l.id ?? ''}</span>
+            </div>
+          </div>
+          <div class="time-col">
+            <div class="time-ago">${timeAgo(l.launchDate)}</div>
+            <div class="time-exact">${formatExact(l.launchDate)}</div>
+          </div>
+        </div>
+      `;
+    });
+    listEl.innerHTML = html;
+  }
+
+  async function loadLaunches(isManual) {
+    if (isManual) refreshBtn.classList.add('spinning');
+    setStatus('ok', 'Loading…');
+    try {
+      const data = await fetchLaunchesData();
+      allLaunches = data.sort((a, b) => new Date(b.launchDate) - new Date(a.launchDate));
+      render(allLaunches);
+      setStatus('ok', 'Live · updated ' + new Date().toLocaleTimeString());
+    } catch (err) {
+      setStatus('error', 'Feed unavailable');
+      if (allLaunches.length === 0) {
+        listEl.innerHTML = `
+          <div class="error-box">
+            Couldn't reach the RNLI launches feed right now.<br>
+            This can happen if the API is mid-migration or temporarily down.
+            <br><button onclick="loadLaunches(true)">Try again</button>
+          </div>`;
+      }
+    } finally {
+      if (isManual) refreshBtn.classList.remove('spinning');
+    }
+  }
+
+  refreshBtn.addEventListener('click', () => loadLaunches(true));
+  searchBox.addEventListener('input', () => render(allLaunches));
+
+  loadLaunches(false);
+  refreshTimer = setInterval(() => loadLaunches(false), 60000);
+</script>
+
+</body>
+</html>
