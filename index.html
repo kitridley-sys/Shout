@@ -275,6 +275,107 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  .help-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .help-btn:hover { background: rgba(255,255,255,0.2); }
+
+  .splash-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,26,56,0.72);
+    z-index: 200;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 24px 16px;
+  }
+  .splash-backdrop.open { display: flex; }
+  .splash-card {
+    background: white;
+    border-radius: 16px;
+    max-width: 480px;
+    width: 100%;
+    padding: 24px 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .splash-card h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: var(--navy);
+  }
+  .splash-lead {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+  .splash-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .splash-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 6px;
+    padding-bottom: 0;
+  }
+  .splash-section h3 {
+    margin: 0 0 4px;
+    font-size: 14.5px;
+    color: var(--navy);
+  }
+  .splash-section p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .splash-close {
+    width: 100%;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+
+  .watch-backup-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .watch-backup-row button {
+    flex: 1;
+    min-width: 130px;
+    background: var(--foam);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    color: var(--navy);
+    cursor: pointer;
+  }
+  .watch-backup-row button:hover { background: #e6eef5; }
+
   .count-row {
     font-size: 12.5px;
     color: var(--muted);
@@ -421,14 +522,46 @@
 
 <div class="toast-stack" id="toastStack"></div>
 
+<div class="splash-backdrop" id="splashBackdrop">
+  <div class="splash-card">
+    <h2>⚓ Welcome to RNLI Launches</h2>
+    <p class="splash-lead">A live feed of the last 50 lifeboat launches across the UK &amp; Ireland, pulled from the official RNLI feed.</p>
+
+    <div class="splash-section">
+      <h3>★ Watch specific stations</h3>
+      <p>Tap <b>Watching</b> to add stations you care about. They'll get a star and highlighted border in the list, and matching launches trigger alerts.</p>
+    </div>
+
+    <div class="splash-section">
+      <h3>🔔 Getting alerted</h3>
+      <p>While this page is open, a new launch from a watched station shows a toast and plays a pager sound. For alerts even when the site's closed, this app also pushes to <b>ntfy</b> — subscribe to your topic in the ntfy app to get them on your phone.</p>
+    </div>
+
+    <div class="splash-section">
+      <h3>💾 Save &amp; restore your watch list</h3>
+      <p>Use <b>Save backup</b> in the Watching panel to download your list as a file, and <b>Restore backup</b> to load it again — handy when switching browsers or devices.</p>
+    </div>
+
+    <div class="splash-section">
+      <h3>🔊 Pager sound</h3>
+      <p>Tap <b>Test sound</b> once in the Watching panel so your browser allows audio to play automatically later — this is a browser requirement, not a bug.</p>
+    </div>
+
+    <button class="splash-close" id="splashCloseBtn">Got it, let's go</button>
+  </div>
+</div>
+
 <header>
   <div class="header-row">
     <div class="title">
       <h1>RNLI <span class="accent">Launches</span></h1>
     </div>
-    <div class="status-pill" id="statusPill">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">Connecting…</span>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="help-btn" id="helpBtn" aria-label="How this app works" title="How this app works">?</button>
+      <div class="status-pill" id="statusPill">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Connecting…</span>
+      </div>
     </div>
   </div>
   <p class="subtitle">Last 50 lifeboat launches across the UK &amp; Ireland — from the official RNLI feed</p>
@@ -449,7 +582,7 @@
 
   <div class="watch-panel" id="watchPanel">
     <h3>Watched stations</h3>
-    <p class="hint">Get alerted when one of these stations launches. Type a station name and hit Add.</p>
+    <p class="hint">Shared with your ntfy push alerts too. Type a station name and hit Add.</p>
     <div class="watch-add-row">
       <input type="text" id="watchInput" placeholder="e.g. Poole, Salcombe, Tower…" list="stationSuggestions" />
       <datalist id="stationSuggestions"></datalist>
@@ -457,9 +590,20 @@
     </div>
     <div class="watch-chips" id="watchChips"></div>
     <div class="watch-empty" id="watchEmpty">No stations watched yet — add one above.</div>
+
+    <div class="watch-backup-row">
+      <button id="exportBtn">⬇ Save backup</button>
+      <button id="importBtn">⬆ Restore backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+    </div>
+
     <div class="alert-toggle-row">
       <span id="alertStatusText">Browser alerts are off</span>
-      <button id="alertPermBtn">Enable alerts</button>
+      <button id="alertPermBtn">Enable browser alerts too</button>
+    </div>
+    <div class="alert-toggle-row">
+      <span>Pager sound for new watched launches</span>
+      <button id="testSoundBtn">🔊 Test sound</button>
     </div>
   </div>
 
@@ -497,11 +641,20 @@
   const alertPermBtn = document.getElementById('alertPermBtn');
   const alertStatusText = document.getElementById('alertStatusText');
   const toastStack = document.getElementById('toastStack');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+  const testSoundBtn = document.getElementById('testSoundBtn');
+  const helpBtn = document.getElementById('helpBtn');
+  const splashBackdrop = document.getElementById('splashBackdrop');
+  const splashCloseBtn = document.getElementById('splashCloseBtn');
 
   let allLaunches = [];
   let refreshTimer = null;
 
-  // ---------- Watch list (persisted in this browser) ----------
+  // ---------- Watch list (shared server-side via /api/watchlist, used by
+  // both this page and the ntfy alert checker; localStorage is just a
+  // fast local cache so the UI doesn't flash empty while the fetch is in flight) ----------
   const WATCH_KEY = 'rnli_watched_stations';
   let watchList = [];
   try {
@@ -511,8 +664,37 @@
 
   let seenLaunchIds = null; // null = not initialised yet (first load shouldn't trigger alerts)
 
-  function saveWatchList() {
+  function cacheWatchListLocally() {
     try { localStorage.setItem(WATCH_KEY, JSON.stringify(watchList)); } catch {}
+  }
+
+  async function loadWatchListFromServer() {
+    try {
+      const res = await fetch('/api/watchlist', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        watchList = data;
+        cacheWatchListLocally();
+        renderWatchChips();
+        render(allLaunches);
+      }
+    } catch (err) {
+      // Fall back silently to whatever's cached locally
+      console.warn('Could not load shared watch list, using local cache', err);
+    }
+  }
+
+  async function saveWatchListToServer() {
+    try {
+      await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ stations: watchList })
+      });
+    } catch (err) {
+      console.warn('Could not sync watch list to server — Telegram alerts may be out of date', err);
+    }
   }
 
   function isWatchedName(name) {
@@ -532,7 +714,8 @@
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-idx'), 10);
         watchList.splice(idx, 1);
-        saveWatchList();
+        cacheWatchListLocally();
+        saveWatchListToServer();
         renderWatchChips();
         render(allLaunches);
       });
@@ -544,7 +727,8 @@
     if (!name) return;
     if (isWatchedName(name)) { watchInput.value = ''; return; }
     watchList.push(name);
-    saveWatchList();
+    cacheWatchListLocally();
+    saveWatchListToServer();
     watchInput.value = '';
     renderWatchChips();
     render(allLaunches);
@@ -593,6 +777,114 @@
   });
   refreshAlertStatus();
 
+  // ---------- Pager sound effect (synthesised — no audio file needed) ----------
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playPagerSound() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    // Classic two-tone pager beep: two short square-wave tones, repeated twice
+    const now = ctx.currentTime;
+    const tones = [
+      { freq: 1400, start: 0,    dur: 0.16 },
+      { freq: 1100, start: 0.18, dur: 0.16 },
+      { freq: 1400, start: 0.5,  dur: 0.16 },
+      { freq: 1100, start: 0.68, dur: 0.16 }
+    ];
+    tones.forEach(t => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = t.freq;
+      gain.gain.setValueAtTime(0.0001, now + t.start);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + t.start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t.start + t.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + t.start);
+      osc.stop(now + t.start + t.dur + 0.02);
+    });
+  }
+
+  testSoundBtn.addEventListener('click', () => {
+    getAudioCtx(); // unlocks audio on this user gesture for later automatic playback
+    playPagerSound();
+  });
+
+  // ---------- Save / restore watch list as a local file ----------
+  exportBtn.addEventListener('click', () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      stations: watchList
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rnli-watchlist-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  importBtn.addEventListener('click', () => importFile.click());
+  importFile.addEventListener('change', async () => {
+    const file = importFile.files && importFile.files[0];
+    importFile.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const stations = Array.isArray(parsed) ? parsed : parsed.stations;
+      if (!Array.isArray(stations)) throw new Error('No station list found in that file');
+      const restored = [...new Set(stations.map(s => String(s).trim()).filter(Boolean))];
+      if (restored.length === 0) throw new Error('That backup file has no stations in it');
+      // Merge with whatever's currently watched rather than silently discarding it
+      const merged = [...new Set([...watchList, ...restored])];
+      watchList = merged;
+      cacheWatchListLocally();
+      saveWatchListToServer();
+      renderWatchChips();
+      render(allLaunches);
+      showSimpleToast(`Restored ${restored.length} station${restored.length === 1 ? '' : 's'} from backup`);
+    } catch (err) {
+      showSimpleToast('Could not restore that file: ' + err.message);
+    }
+  });
+
+  function showSimpleToast(text) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = text;
+    toastStack.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  }
+
+  // ---------- Splash / help screen ----------
+  const SPLASH_SEEN_KEY = 'rnli_splash_seen';
+  function openSplash() { splashBackdrop.classList.add('open'); }
+  function closeSplash() {
+    splashBackdrop.classList.remove('open');
+    try { localStorage.setItem(SPLASH_SEEN_KEY, '1'); } catch {}
+  }
+  helpBtn.addEventListener('click', openSplash);
+  splashCloseBtn.addEventListener('click', closeSplash);
+  splashBackdrop.addEventListener('click', (e) => {
+    if (e.target === splashBackdrop) closeSplash();
+  });
+  let hasSeenSplash = false;
+  try { hasSeenSplash = localStorage.getItem(SPLASH_SEEN_KEY) === '1'; } catch {}
+  if (!hasSeenSplash) openSplash();
+
   // ---------- Toast + notification when a watched station launches ----------
   function showToast(launch) {
     const el = document.createElement('div');
@@ -605,6 +897,7 @@
   function notifyLaunch(launch) {
     const stationName = launch.title || launch.shortName || 'A watched station';
     showToast(launch);
+    playPagerSound();
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
         new Notification('RNLI launch: ' + stationName, {
@@ -771,6 +1064,7 @@
   searchBox.addEventListener('input', () => render(allLaunches));
 
   renderWatchChips();
+  loadWatchListFromServer();
   loadLaunches(false);
   refreshTimer = setInterval(() => loadLaunches(false), 60000);
 </script>
